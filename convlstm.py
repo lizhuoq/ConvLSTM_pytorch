@@ -67,6 +67,7 @@ class ConvLSTM(nn.Module):
         hidden_dim: Number of hidden channels
         kernel_size: Size of kernel in convolutions
         num_layers: Number of LSTM layers stacked on each other
+        dropout: If non-zero, introduces a Dropout layer on the outputs of each ConvLSTM layer except the last layer, with dropout probability equal to dropout. Default: 0
         batch_first: Whether or not dimension 0 is the batch or not
         bias: Bias or no bias in Convolution
         return_all_layers: Return the list of computations for all layers
@@ -86,7 +87,7 @@ class ConvLSTM(nn.Module):
         >> h = last_states[0][0]  # 0 for layer index, 0 for h index
     """
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers,
+    def __init__(self, input_dim, hidden_dim, kernel_size, num_layers, dropout=0.0, 
                  batch_first=False, bias=True, return_all_layers=False):
         super(ConvLSTM, self).__init__()
 
@@ -116,6 +117,7 @@ class ConvLSTM(nn.Module):
                                           bias=self.bias))
 
         self.cell_list = nn.ModuleList(cell_list)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, input_tensor, hidden_state=None):
         """
@@ -161,7 +163,10 @@ class ConvLSTM(nn.Module):
                 output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
-            cur_layer_input = layer_output
+            if layer_idx != self.num_layers - 1:
+                cur_layer_input = self.dropout(layer_output)
+            else:
+                cur_layer_input = layer_output
 
             layer_output_list.append(layer_output)
             last_state_list.append([h, c])
