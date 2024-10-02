@@ -18,7 +18,8 @@ Example usage:
 model = ConvLSTM(input_dim=channels,
                  hidden_dim=[64, 64, 128],
                  kernel_size=(3, 3),
-                 num_layers=3,
+                 num_layers=3, 
+                 dropout=0.1,
                  batch_first=True
                  bias=True,
                  return_all_layers=False)
